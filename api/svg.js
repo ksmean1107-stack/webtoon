@@ -38,6 +38,12 @@ export default async function handler(req) {
     ]);
 
     const LAYOUT_CONFIG = {
+      "1": {
+        img:  { x: 50, y: 350, w: 924, h: 1100 },
+        de:   { y: 180, size: 42 },
+        text: { y: 1750, size: 48 }, // 대사 기본 높이
+        ef:   { x: 512, y: 950, size: 130, rotate: -5 }
+            },
       "default": {
         img:  { x: 50, y: 350, w: 924, h: 1100 },
         de:   { y: 180, size: 42 },
