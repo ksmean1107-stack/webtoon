@@ -18,7 +18,7 @@ export default async function handler(req) {
   for (let i = 1; i <= 20; i++) {
     BG_LIST[i.toString()] = `https://igx.kr/v/1H/WEBTOON/${i}`;
   }
-  BG_LIST["default"] = "https://via.placeholder.com/400x500/cccccc/666666?text=No+BG+Image";
+  BG_LIST["default"] = "https://igx.kr/v/1H/ERROR/1";
 
   // ==================================================================================
   // [설정 B] IMG 리스트
