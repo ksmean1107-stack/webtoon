@@ -4,22 +4,25 @@ export default async function handler(req) {
   try {
     const { searchParams } = new URL(req.url);
 
-    const bg = searchParams.get('bg') || '1';
-    const bgNum = parseInt(bg) || 1;
+    const bgNum = searchParams.get('bg') || '1';
     const imgParam = searchParams.get('img') || '1';
     const deRaw = searchParams.get('de') || '';
     const textRaw = searchParams.get('text') || '';
     const efRaw = searchParams.get('ef') || '';
 
-    // 특수기호 처리: _(공백), /(줄바꿈)
+    // [커스텀 변수] 여백 및 크기 조절 (여기서 상하좌우 여백 조절 가능)
+    const padX = 70; // 말풍선 좌우 여백 (타원형이므로 글자와 테두리 사이의 넓은 공간)
+    const padY = 50; // 말풍선 위아래 여백
+
+    // 텍스트 처리: _(공백), /(줄바꿈)
     const processText = (str) => str.replace(/_/g, ' ').split('/');
-    const esc = (s) => s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    const esc = (s) => s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&#x22;',"'":'&#x27;'}[m]));
 
     const deLines = processText(deRaw);
     const textLines = processText(textRaw);
     const efLines = processText(efRaw);
 
-    // 이미지 경로 설정 (WEB_IMG 기본 적용)
+    // 이미지 데이터 로드
     const bgUrl = `https://igx.kr/v/1H/WEBTOON/${bgNum}`;
     const targetImgUrl = imgParam.startsWith('http') ? imgParam : `https://igx.kr/v/1H/WEB_IMG/${imgParam}`;
 
@@ -29,44 +32,50 @@ export default async function handler(req) {
         const resp = await fetch(proxyUrl);
         if (!resp.ok) return "";
         const arrayBuffer = await resp.arrayBuffer();
-        const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-        return `data:image/png;base64,${base64}`;
+        return `data:image/png;base64,${btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))}`;
       } catch { return ""; }
     };
 
-    const [finalBgData, finalImgData] = await Promise.all([
-      getImgData(bgUrl),
-      getImgData(targetImgUrl)
-    ]);
+    const [finalBgData, finalImgData] = await Promise.all([getImgData(bgUrl), getImgData(targetImgUrl)]);
 
-    // 레이아웃 (배경별 개별 설정 가능)
-    const LAYOUT_CONFIG = {
-      "1": {
-        img:  { x: 50, y: 350, w: 924, h: 1100 },
-        de:   { y: 180, size: 42 },
-        text: { y: 1750, size: 48 }, // 대사 기본 높이
-        ef:   { x: 512, y: 950, size: 130, rotate: -5 }
-      },
-      "default": {
-        img:  { x: 50, y: 350, w: 924, h: 1100 },
-        de:   { y: 180, size: 42 },
-        text: { y: 1780, size: 50 },
-        ef:   { x: 512, y: 950, size: 130, rotate: -5 }
-      }
+    // 레이아웃 수치 (여기서 BG별 설정 가능)
+    const conf = {
+      img:  { x: 50, y: 350, w: 924, h: 1100 },
+      de:   { y: 180, size: 42 },
+      text: { y: 1780, size: 50 }, // 텍스트 기준점
+      ef:   { x: 512, y: 950, size: 130, rotate: -5 }
     };
-    const conf = LAYOUT_CONFIG[bg] || LAYOUT_CONFIG["default"];
 
-    // --- 가로로 길쭉한 타원형(Pill) 계산 ---
+    // [핵심] 글자 종류별 너비 자동 계산 (한글/영어/숫자/특수문자/공백 등)
+    const calculateWidth = (lines, fontSize) => {
+      let maxWidth = 0;
+      lines.forEach(line => {
+        let width = 0;
+        for (let i = 0; i < line.length; i++) {
+          const char = line.charCodeAt(i);
+          if (char > 0x2500) width += fontSize * 1.0; // 한글
+          else if (char >= 65 && char <= 90) width += fontSize * 0.9; // 대문자
+          else if (char >= 48 && char <= 57) width += fontSize * 0.7; // 숫자
+          else if (char === 32) width += fontSize * 0.5; // 공백
+          else width += fontSize * 0.8; // 소문자, 특수문자 등
+        }
+        if (width > maxWidth) maxWidth = width;
+      });
+      return maxWidth;
+    };
+
     const fontSize = conf.text.size;
-    const lineHeight = fontSize * 1.4;
-    const longestLineLen = Math.max(...textLines.map(l => l.length), 1);
+    const textWidth = calculateWidth(textLines, fontSize);
     
-    // 타원형의 곡선 여백을 위해 너비를 넉넉히 계산
-    const bubbleW = Math.min(longestLineLen * fontSize * 1.1 + 140, 960); 
-    const bubbleH = textLines.length * lineHeight + 80;
-    const bubbleX = (1024 - bubbleW) / 2;
-    const bubbleY = conf.text.y - (bubbleH / 2);
+    // 타원형의 가로, 세로 반지름 계산
+    const ellipseRx = (textWidth + padX * 2) / 2; // 가로 반지름
+    const ellipseRy = ((textLines.length * fontSize * 1.4) + padY * 2) / 2; // 세로 반지름
 
+    // 타원형의 중심점
+    const ellipseCx = 1024 / 2;
+    const ellipseCy = conf.text.y; // 텍스트 기준점 그대로 타원형 중심 Y로 사용
+
+    // 5. SVG 조립
     let svgContent = `
     <svg width="1024" height="2000" viewBox="0 0 1024 2000" xmlns="http://www.w3.org/2000/svg">
       <image href="${finalBgData}" x="0" y="0" width="1024" height="2000" preserveAspectRatio="xMidYMid slice" />
@@ -77,11 +86,10 @@ export default async function handler(req) {
       `).join('')}
 
       ${textRaw ? `
-        <rect x="${bubbleX}" y="${bubbleY}" width="${bubbleW}" height="${bubbleH}" 
-          rx="${bubbleH / 2}" ry="${bubbleH / 2}" 
+        <ellipse cx="${ellipseCx}" cy="${ellipseCy}" rx="${ellipseRx}" ry="${ellipseRy}" 
           fill="white" stroke="black" stroke-width="6" />
         ${textLines.map((line, i) => `
-          <text x="512" y="${bubbleY + (lineHeight * (i + 1)) + 5}" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="${fontSize}" fill="#000">${esc(line)}</text>
+          <text x="512" y="${ellipseCy - ellipseRy + padY + (i + 0.8) * fontSize * 1.4}" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="${fontSize}" fill="#000">${esc(line)}</text>
         `).join('')}
       ` : ''}
 
@@ -93,7 +101,6 @@ export default async function handler(req) {
     </svg>`;
 
     return new Response(svgContent.trim(), { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-cache' } });
-
   } catch (err) {
     return new Response(`<svg><text y="20">Error: ${err.message}</text></svg>`, { headers: { 'Content-Type': 'image/svg+xml' } });
   }
