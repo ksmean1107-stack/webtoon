@@ -41,7 +41,7 @@ export default async function handler(req) {
 
   // [레이아웃 설정]
   const LAYOUT_CONFIG = {
-    "default": { 
+    "1": { 
       img:  { x: 50, y: 350, w: 924, h: 1100 },
       de:   { y: 180, size: 42, color: "#222" },
       text: { y: 1780, size: 50, color: "#000" },
