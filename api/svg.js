@@ -24,8 +24,8 @@ export default async function handler(req) {
 
   const bgUrl = `https://igx.kr/v/1H/WEBTOON/${bg}`;
   const IMG_LIST = {
-    "1": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=600",
-    "2": "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=600"
+    "1": "https://igx.kr/v/1H/WEB_IMG/1",
+    "2": "https://igx.kr/v/1H/WEB_IMG/2"
   };
   const imgUrl = IMG_LIST[imgParam] || imgParam;
 
