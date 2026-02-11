@@ -3,7 +3,7 @@ export const config = { runtime: 'edge' };
 export default async function handler(req) {
   const { searchParams } = new URL(req.url);
 
-  // 1. 파라미터 받기
+  // 1. 파라미터 추출
   const bg = searchParams.get('bg') || '1';
   const bgNum = parseInt(bg);
   const imgParam = searchParams.get('img'); 
@@ -11,7 +11,7 @@ export default async function handler(req) {
   const de = searchParams.get('de') || '';
   const ef = searchParams.get('ef') || '';
 
-  // 이미지 프록시 및 Base64 변환 (403 방어)
+  // 이미지 프록시 및 Base64 변환 (서버 차단 우회 및 렌더링 보장)
   const getImgData = async (url) => {
     try {
       if (!url) return "";
@@ -27,8 +27,8 @@ export default async function handler(req) {
   // 2. 이미지 주소 결정
   const bgUrl = `https://igx.kr/v/1H/WEBTOON/${bg}`;
   const IMG_LIST = {
-    "1": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=600",
-    "2": "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=600"
+    "1": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=1024",
+    "2": "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=1024"
   };
   const imgUrl = IMG_LIST[imgParam] || imgParam;
 
@@ -37,21 +37,20 @@ export default async function handler(req) {
     getImgData(imgUrl)
   ]);
 
-  // 3. 레이아웃 설정 (1024x2000 비율에 맞춰 좌표 조정)
-  // 곡선 제거를 위해 rx 설정 삭제
+  // 3. 레이아웃 설정 (1024x2000 꽉 차는 비율로 재설정)
   const LAYOUT_CONFIG = {
     "1-3": { 
       show: ["de", "img", "text"],
-      img:  { x: 50, y: 300, w: 924, h: 800 },
+      img:  { x: 0, y: 0, w: 1024, h: 2000 }, // 배경과 동일하게 꽉 채움
       de:   { y: 150, fontSize: 45, color: "#333" },
       text: { y: 1850, fontSize: 55, color: "#000" },
       ef:   { x: 512, y: 1000, fontSize: 100, rotate: -5 }
     },
     "4-10": { 
       show: ["img", "text"],
-      img:  { x: 112, y: 400, w: 800, h: 800 },
+      img:  { x: 0, y: 200, w: 1024, h: 1600 }, // 상하 여백만 살짝 둔 꽉 찬 스타일
       de:   { y: 150, fontSize: 45, color: "#333" },
-      text: { y: 1850, fontSize: 55, color: "#000" },
+      text: { y: 1900, fontSize: 55, color: "#000" },
       ef:   { x: 512, y: 1000, fontSize: 100, rotate: -5 }
     },
     "11-14": { 
@@ -63,7 +62,7 @@ export default async function handler(req) {
     },
     "15-18": { 
       show: ["img", "text"],
-      img:  { x: 212, y: 300, w: 600, h: 1000 },
+      img:  { x: 0, y: 0, w: 1024, h: 2000 },
       de:   { y: 150, fontSize: 45, color: "#333" },
       text: { y: 1850, fontSize: 55, color: "#000" },
       ef:   { x: 512, y: 1000, fontSize: 100, rotate: -5 }
@@ -71,7 +70,7 @@ export default async function handler(req) {
     "19-20": { 
       show: ["de", "img"],
       img:  { x: 0, y: 0, w: 1024, h: 2000 },
-      de:   { y: 150, fontSize: 60, color: "#fff" },
+      de:   { y: 200, fontSize: 60, color: "#fff" },
       text: { y: 1850, fontSize: 55, color: "#000" },
       ef:   { x: 512, y: 1000, fontSize: 100, rotate: -5 }
     }
@@ -86,23 +85,23 @@ export default async function handler(req) {
 
   const esc = (s) => (s || "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
-  // SVG 생성 (1024x2000 규격 반영)
+  // 4. SVG 생성
   const svg = `
     <svg width="1024" height="2000" viewBox="0 0 1024 2000" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100%" height="100%" fill="#ffffff" />
+      <rect width="1024" height="2000" fill="#ffffff" />
 
-      <image href="${finalBgData}" width="1024" height="2000" preserveAspectRatio="xMidYMid slice" />
+      <image href="${finalBgData}" x="0" y="0" width="1024" height="2000" preserveAspectRatio="xMidYMid slice" />
 
       ${conf.show.includes("img") && finalImgData ? `
         <image href="${finalImgData}" x="${conf.img.x}" y="${conf.img.y}" width="${conf.img.w}" height="${conf.img.h}" preserveAspectRatio="xMidYMid slice" />
       ` : ''}
 
       ${conf.show.includes("de") && de ? `
-        <text x="50%" y="${conf.de.y}" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="${conf.de.fontSize}" fill="${conf.de.color}">${esc(de)}</text>
+        <text x="512" y="${conf.de.y}" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="${conf.de.fontSize}" fill="${conf.de.color}">${esc(de)}</text>
       ` : ''}
 
       ${conf.show.includes("text") && text ? `
-        <text x="50%" y="${conf.text.y}" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="${conf.text.fontSize}" fill="${conf.text.color}">${esc(text)}</text>
+        <text x="512" y="${conf.text.y}" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="${conf.text.fontSize}" fill="${conf.text.color}">${esc(text)}</text>
       ` : ''}
 
       ${conf.show.includes("ef") && ef ? `
