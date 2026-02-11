@@ -28,7 +28,7 @@ export default async function handler(req) {
 
   // 2. IMG 주소 (일러스트) - 커스텀 링크 로직
   const IMG_LIST = {
-    "1": "https://igx.kr/v/1H/WEB_IMG/1",
+    "1": "https://igx.kr/v/1H/WEBTOON/1",
     "2": "https://igx.kr/v/1H/WEB_IMG/2"
   };
   // 번호(1, 2)면 리스트에서 찾고, 아니면 입력받은 URL 그대로 사용
