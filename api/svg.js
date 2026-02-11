@@ -6,12 +6,12 @@ export default async function handler(req) {
   // 1. 파라미터 받기
   const bg = searchParams.get('bg') || '1';
   const bgNum = parseInt(bg);
-  const imgParam = searchParams.get('img'); // 웹툰 그림(일러스트)
+  const imgParam = searchParams.get('img'); 
   const text = searchParams.get('text') || '';
   const de = searchParams.get('de') || '';
   const ef = searchParams.get('ef') || '';
 
-  // 이미지 프록시 및 Base64 변환 함수 (403 에러 방지)
+  // 이미지 프록시 및 Base64 변환 (403 방어)
   const getImgData = async (url) => {
     try {
       if (!url) return "";
@@ -25,58 +25,55 @@ export default async function handler(req) {
   };
 
   // 2. 이미지 주소 결정
-  // bg: 흰색 뒷배경(프레임), img: 실제 그림
   const bgUrl = `https://igx.kr/v/1H/WEBTOON/${bg}`;
-  
-  // IMG_LIST (주인공/조연 등 프리셋)
   const IMG_LIST = {
-    "1": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400",
-    "2": "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=400"
+    "1": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=600",
+    "2": "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=600"
   };
   const imgUrl = IMG_LIST[imgParam] || imgParam;
 
-  // 두 이미지 모두 Base64로 변환 (속도와 안정성 위해 병렬 처리)
   const [finalBgData, finalImgData] = await Promise.all([
     getImgData(bgUrl),
     getImgData(imgUrl)
   ]);
 
-  // 3. 레이아웃 설정 (기존 로직 유지)
+  // 3. 레이아웃 설정 (1024x2000 비율에 맞춰 좌표 조정)
+  // 곡선 제거를 위해 rx 설정 삭제
   const LAYOUT_CONFIG = {
     "1-3": { 
       show: ["de", "img", "text"],
-      img:  { x: 20, y: 70, w: 150, h: 150 },
-      de:   { y: 35, fontSize: 16, color: "#333" },
-      text: { y: 440, fontSize: 20, color: "#000" },
-      ef:   { x: 200, y: 250, fontSize: 40, rotate: -5 }
+      img:  { x: 50, y: 300, w: 924, h: 800 },
+      de:   { y: 150, fontSize: 45, color: "#333" },
+      text: { y: 1850, fontSize: 55, color: "#000" },
+      ef:   { x: 512, y: 1000, fontSize: 100, rotate: -5 }
     },
     "4-10": { 
       show: ["img", "text"],
-      img:  { x: 50, y: 80, w: 300, h: 300 },
-      de:   { y: 35, fontSize: 16, color: "#333" },
-      text: { y: 440, fontSize: 20, color: "#000" },
-      ef:   { x: 200, y: 250, fontSize: 40, rotate: -5 }
+      img:  { x: 112, y: 400, w: 800, h: 800 },
+      de:   { y: 150, fontSize: 45, color: "#333" },
+      text: { y: 1850, fontSize: 55, color: "#000" },
+      ef:   { x: 512, y: 1000, fontSize: 100, rotate: -5 }
     },
     "11-14": { 
       show: ["img", "text", "ef"],
-      img:  { x: 0, y: 0, w: 400, h: 500 }, // 강조형은 크게
-      de:   { y: 35, fontSize: 16, color: "#333" },
-      text: { y: 440, fontSize: 20, color: "#000" },
-      ef:   { x: 200, y: 200, fontSize: 50, rotate: 10 }
+      img:  { x: 0, y: 0, w: 1024, h: 2000 },
+      de:   { y: 150, fontSize: 45, color: "#333" },
+      text: { y: 1850, fontSize: 55, color: "#000" },
+      ef:   { x: 512, y: 800, fontSize: 120, rotate: 10 }
     },
     "15-18": { 
       show: ["img", "text"],
-      img:  { x: 75, y: 40, w: 250, h: 350 },
-      de:   { y: 35, fontSize: 16, color: "#333" },
-      text: { y: 440, fontSize: 20, color: "#000" },
-      ef:   { x: 200, y: 250, fontSize: 40, rotate: -5 }
+      img:  { x: 212, y: 300, w: 600, h: 1000 },
+      de:   { y: 150, fontSize: 45, color: "#333" },
+      text: { y: 1850, fontSize: 55, color: "#000" },
+      ef:   { x: 512, y: 1000, fontSize: 100, rotate: -5 }
     },
     "19-20": { 
       show: ["de", "img"],
-      img:  { x: 0, y: 0, w: 400, h: 500 },
-      de:   { y: 40, fontSize: 22, color: "#fff" }, // 전체화면형은 글자 크게
-      text: { y: 440, fontSize: 20, color: "#000" },
-      ef:   { x: 200, y: 250, fontSize: 40, rotate: -5 }
+      img:  { x: 0, y: 0, w: 1024, h: 2000 },
+      de:   { y: 150, fontSize: 60, color: "#fff" },
+      text: { y: 1850, fontSize: 55, color: "#000" },
+      ef:   { x: 512, y: 1000, fontSize: 100, rotate: -5 }
     }
   };
 
@@ -89,29 +86,27 @@ export default async function handler(req) {
 
   const esc = (s) => (s || "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 
-  // SVG 생성
+  // SVG 생성 (1024x2000 규격 반영)
   const svg = `
-    <svg width="400" height="500" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <clipPath id="clip"><rect x="${conf.img.x}" y="${conf.img.y}" width="${conf.img.w}" height="${conf.img.h}" rx="10" /></clipPath>
-      </defs>
-      
-      <image href="${finalBgData}" width="400" height="500" preserveAspectRatio="xMidYMid slice" />
+    <svg width="1024" height="2000" viewBox="0 0 1024 2000" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100%" height="100%" fill="#ffffff" />
+
+      <image href="${finalBgData}" width="1024" height="2000" preserveAspectRatio="xMidYMid slice" />
 
       ${conf.show.includes("img") && finalImgData ? `
-        <image href="${finalImgData}" x="${conf.img.x}" y="${conf.img.y}" width="${conf.img.w}" height="${conf.img.h}" preserveAspectRatio="xMidYMid slice" clip-path="url(#clip)" />
+        <image href="${finalImgData}" x="${conf.img.x}" y="${conf.img.y}" width="${conf.img.w}" height="${conf.img.h}" preserveAspectRatio="xMidYMid slice" />
       ` : ''}
 
       ${conf.show.includes("de") && de ? `
-        <text x="50%" y="${conf.de.y}" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="${conf.de.fontSize}" fill="${conf.de.color || 'black'}">${esc(de)}</text>
+        <text x="50%" y="${conf.de.y}" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="${conf.de.fontSize}" fill="${conf.de.color}">${esc(de)}</text>
       ` : ''}
 
       ${conf.show.includes("text") && text ? `
-        <text x="50%" y="${conf.text.y}" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="${conf.text.fontSize}" fill="${conf.text.color || 'black'}">${esc(text)}</text>
+        <text x="50%" y="${conf.text.y}" text-anchor="middle" font-family="sans-serif" font-weight="bold" font-size="${conf.text.fontSize}" fill="${conf.text.color}">${esc(text)}</text>
       ` : ''}
 
       ${conf.show.includes("ef") && ef ? `
-        <text x="${conf.ef.x}" y="${conf.ef.y}" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="${conf.ef.fontSize}" fill="#ff0" stroke="#000" stroke-width="2" transform="rotate(${conf.ef.rotate}, ${conf.ef.x}, ${conf.ef.y})">${esc(ef)}</text>
+        <text x="${conf.ef.x}" y="${conf.ef.y}" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="${conf.ef.fontSize}" fill="#ff0" stroke="#000" stroke-width="4" transform="rotate(${conf.ef.rotate}, ${conf.ef.x}, ${conf.ef.y})">${esc(ef)}</text>
       ` : ''}
     </svg>
   `.trim();
