@@ -35,7 +35,7 @@ export default async function handler(req) {
 
     // 3. 레이아웃 엔진 (BG 번호별 상세 커스텀 가능)
     const LAYOUTS = {
-      "1-3":   { img: {x:51, y:450, w:924, h:1100}, de: {y:180, size:42}, text: {y:1780, size:50}, ef: {x:512, y:950, size:130, rot:-5} },
+      "1-3":   { img: {x:51, y:600, w:924, h:1100}, de: {y:180, size:42}, text: {y:1780, size:50}, ef: {x:512, y:950, size:130, rot:-5} },
       "4-10":  { img: {x:0, y:200, w:1024, h:1400}, de: {y:150, size:40}, text: {y:1850, size:55}, ef: {x:512, y:1000, size:130, rot:0} },
       "11-14": { img: {x:50, y:100, w:924, h:1500}, de: {y:150, size:40}, text: {y:1800, size:50}, ef: {x:512, y:800, size:160, rot:-10} },
       "15-18": { img: {x:112, y:400, w:800, h:800},  de: {y:150, size:40}, text: {y:1850, size:55}, ef: {x:512, y:1000, size:130, rot:5} },
