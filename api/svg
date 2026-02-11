@@ -15,10 +15,27 @@ export default function handler(req) {
   // [설정 A] BG 리스트: ?bg=번호 일 때 뜰 이미지
   // ==================================================================================
   const BG_LIST = {
-    "1": "https://images.unsplash.com/photo-1599058945522-28d584b6f0ff?w=400", // 예: bg=1 기본 이미지
-    "2": "https://images.unsplash.com/photo-1606103920295-c70e30b80580?w=400",
-    "11": "https://images.unsplash.com/photo-1542831371-29b0f74f9713?w=400",
-    "default": "https://via.placeholder.com/400x500/cccccc/666666?text=No+BG+Image"
+    "1": "https://igx.kr/v/1H/WEBTOON/1", // 예: bg=1 기본 이미지
+    "2": "https://igx.kr/v/1H/WEBTOON/2",
+    "3": "https://igx.kr/v/1H/WEBTOON/3",
+    "4": "https://igx.kr/v/1H/WEBTOON/4",
+    "5": "https://igx.kr/v/1H/WEBTOON/5",
+    "6": "https://igx.kr/v/1H/WEBTOON/6",
+    "7": "https://igx.kr/v/1H/WEBTOON/7",
+    "8": "https://igx.kr/v/1H/WEBTOON/8",
+    "9": "https://igx.kr/v/1H/WEBTOON/9",
+    "10": "https://igx.kr/v/1H/WEBTOON/10",
+    "11": "https://igx.kr/v/1H/WEBTOON/11",
+    "12": "https://igx.kr/v/1H/WEBTOON/12",
+    "13": "https://igx.kr/v/1H/WEBTOON/13",
+    "14": "https://igx.kr/v/1H/WEBTOON/14",
+    "15": "https://igx.kr/v/1H/WEBTOON/15",
+    "16": "https://igx.kr/v/1H/WEBTOON/16",
+    "17": "https://igx.kr/v/1H/WEBTOON/17",
+    "18": "https://igx.kr/v/1H/WEBTOON/18",
+    "19": "https://igx.kr/v/1H/WEBTOON/19",
+    "20": "https://igx.kr/v/1H/WEBTOON/20",
+    "default": "https://igx.kr/v/1H/ERROR/1"
   };
 
   // ==================================================================================
