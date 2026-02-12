@@ -4,7 +4,6 @@ export default async function handler(req) {
   try {
     const { searchParams } = new URL(req.url);
 
-    // 1. 파라미터 추출
     const imgParam = searchParams.get('img');
     const deRaw = searchParams.get('de');
     const text1Raw = searchParams.get('text1');
@@ -19,7 +18,6 @@ export default async function handler(req) {
     const text2Lines = process(text2Raw);
     const efLines = process(efRaw);
 
-    // 2. 랜덤 레이아웃 엔진 (형태 유지)
     const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
     const imgW = rand(820, 920);
@@ -30,14 +28,17 @@ export default async function handler(req) {
     const deX = 512;
     const deY = imgY - 240;
 
-    // [수정] Text 위치 랜덤성 강화: 좌우뿐만 아니라 상하 위치도 더 유동적으로 변경
-    const t1X = rand(imgX - 50, imgX + imgW + 50);
-    const t1Y = imgY + rand(-50, 100); 
+    // [수정] Text 위치 로직: Text1과 Text2가 좌우로 서로 떨어지도록 보정
+    const t1X = rand(imgX - 30, imgX + imgW + 30);
+    const t1Y = imgY + rand(-40, 60); 
 
-    const t2X = rand(imgX - 50, imgX + imgW + 50);
-    const t2Y = imgY + imgH + rand(50, 150); 
+    let t2X = rand(imgX - 30, imgX + imgW + 30);
+    // [핵심] t2X가 t1X와 너무 가까우면(250px 미만) 반대편으로 밀어버림
+    if (Math.abs(t2X - t1X) < 250) {
+      t2X = (t1X > 512) ? t2X - 300 : t2X + 300;
+    }
+    const t2Y = imgY + imgH + rand(60, 140); 
 
-    // [수정] EF 설정: 크기 축소 유지 및 스타일 변경 대비
     const efX = rand(150, 874);
     const efY = rand(imgY + 150, imgY + imgH - 150);
     const efRot = rand(-20, 20);
@@ -51,7 +52,6 @@ export default async function handler(req) {
       ef: { x: efX, y: efY, size: efSize, rot: efRot }
     };
 
-    // 3. 이미지 로더
     const getBase64 = async (url) => {
       if (!url) return "";
       try {
@@ -69,7 +69,6 @@ export default async function handler(req) {
 
     const finalImg = await getBase64(imgParam);
 
-    // 4. 말풍선 렌더링
     const renderBubble = (lines, textConf) => {
       if (!lines.length || !textConf) return "";
       const { x, y, size } = textConf;
@@ -96,7 +95,6 @@ export default async function handler(req) {
       `;
     };
 
-    // 5. SVG 조립
     const svg = `
     <svg width="1024" height="2000" viewBox="0 0 1024 2000" xmlns="http://www.w3.org/2000/svg">
       <rect width="1024" height="2000" fill="white" />
