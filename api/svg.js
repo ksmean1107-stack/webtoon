@@ -27,7 +27,7 @@ export default async function handler(req) {
 
     // 2. 레이아웃 1-3 고정 좌표 반영 (51, 462, 795, 1204)
     const LAYOUTS = {
-      "1-3":   { img: {x:51, y:462, w:795, h:1204}, de: {y:180, size:42}, text: {y:1700, size:50}, ef: {x:512, y:950, size:130, rot:-5} },
+      "1-3":   { img: {x:51, y:462, w:795, h:1204}, de: {y:180, size:42}, text: {x:100, y:1700, size:50}, ef: {x:512, y:950, size:130, rot:-5} },
       "4-10":  { img: {x:0, y:200, w:1024, h:1400}, de: {y:150, size:40}, text: {y:1850, size:55}, ef: {x:512, y:1000, size:130, rot:0} },
       "11-14": { img: {x:50, y:100, w:924, h:1500}, de: {y:150, size:40}, text: {y:1800, size:50}, ef: {x:512, y:800, size:160, rot:-10} },
       "15-18": { img: {x:112, y:400, w:800, h:800},  de: {y:150, size:40}, text: {y:1850, size:55}, ef: {x:512, y:1000, size:130, rot:5} },
