@@ -57,7 +57,7 @@ export default async function handler(req) {
 
     const conf = {
       img: { x: imgX, y: imgY, w: imgW, h: imgH },
-      de: { x: deX, y: deY, size: 40 },
+      de: { x: deX, y: deY, size: 45 },
       text1: { x: t1X, y: t1Y, size: 52 },
       text2: { x: t2X, y: t2Y, size: 52 },
       ef: { x: efX, y: efY, size: efSize, rot: efRot }
