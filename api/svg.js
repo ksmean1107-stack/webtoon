@@ -121,7 +121,7 @@ export default async function handler(req) {
       ${renderBubble(text1Lines, conf.text1)}
       ${renderBubble(text2Lines, conf.text2)}
 
-      ${efLines.length ? efLines.map((l, i) => `<text x="${conf.ef.x}" y="${conf.ef.y + (i*conf.ef.size)}" text-anchor="middle" font-family='"Comic Sans MS", "Arial Rounded MT Bold", impact, sans-serif' font-weight="600" font-size="${conf.ef.size}" fill="#FFD700" stroke="#000" stroke-width="12" stroke-linejoin="round" transform="rotate(${conf.ef.rot}, ${conf.ef.x}, ${conf.ef.y})">${esc(l)}</text>`).join('') : ''}
+      ${efLines.length ? efLines.map((l, i) => `<text x="${conf.ef.x}" y="${conf.ef.y + (i*conf.ef.size)}" text-anchor="middle" font-family='"Comic Sans MS", "Arial Rounded MT Bold", impact, sans-serif' font-weight="600" font-size="${conf.ef.size}" fill="#FFD700" stroke="#000" stroke-width="2" stroke-linejoin="round" transform="rotate(${conf.ef.rot}, ${conf.ef.x}, ${conf.ef.y})">${esc(l)}</text>`).join('') : ''}
     </svg>`;
 
     return new Response(svg.trim(), { 
