@@ -51,7 +51,7 @@ export default async function handler(req) {
     };
 
     const bgUrl = `https://igx.kr/v/1H/WEBTOON/${bgNum}`;
-    const imgRawUrl = imgParam.startsWith('http') ? imgParam : `https://igx.kr/v/1H/WEB_IMG/${imgParam}`;
+    const imgRawUrl = imgParam.startsWith('http') ? imgParam : `https://igx.kr/v/1H/WEBTOON_IMG/${imgParam}`;
 
     // 병렬로 Base64 로드
     const [finalBg, finalImg] = await Promise.all([
