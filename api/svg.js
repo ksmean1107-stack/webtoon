@@ -60,7 +60,7 @@ export default async function handler(req) {
     };
 
     const bgUrl = `https://igx.kr/v/1H/WEBTOON/${bgNum}`;
-    const imgUrl = imgParam.startsWith('http') ? imgParam : `https://igx.kr/v/1H/WEB_IMG/${imgParam}`;
+    const imgUrl = imgParam.startsWith('http') ? imgParam : `https://igx.kr/v/1H/WEBTOON_IMG/${imgParam}`;
     const [bgData, imgData] = await Promise.all([getImg(bgUrl), getImg(imgUrl)]);
 
     // 5. 말풍선 너비/높이 계산 (완전 타원형)
