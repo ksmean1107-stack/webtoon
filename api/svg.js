@@ -13,7 +13,7 @@ export default async function handler(req) {
     const text2Raw = searchParams.get('text2') || '';
     const efRaw = searchParams.get('ef') || '';
 
-    // 2. 파라미터 허용 규칙 (text2는 4~10번만)
+    // 2. 대역별 파라미터 허용 규칙 (요청하신 대로 세밀하게 조정)
     let showDe = (bgNum >= 1 && bgNum <= 3) || (bgNum >= 19 && bgNum <= 20);
     let showText1 = (bgNum >= 1 && bgNum <= 18);
     let showText2 = (bgNum >= 4 && bgNum <= 10);
@@ -27,7 +27,7 @@ export default async function handler(req) {
     const text2Lines = showText2 ? process(text2Raw) : [];
     const efLines = showEf ? process(efRaw) : [];
 
-    // 3. 1~20번 개별 레이아웃 설정 (Size: 55 통일)
+    // 3. 1~20번 개별 레이아웃 설정 (모두 size 55 적용)
     const LAYOUTS = {
       "1": { img: {x:51, y:462, w:795, h:1204}, de: {y:180, size:42}, text1: {x:512, y:1780, size:55}, ef: {x:512, y:950, size:130, rot:-5} },
       "2": { img: {x:51, y:462, w:795, h:1204}, de: {y:180, size:42}, text1: {x:512, y:1780, size:55}, ef: {x:512, y:950, size:130, rot:-5} },
@@ -53,59 +53,58 @@ export default async function handler(req) {
 
     const conf = LAYOUTS[bgParam] || LAYOUTS["1"];
 
-    // 4. [수정] 대용량 대응 Base64 변환 함수
+    // 4. [고도화] 이미지 로더 (에러 방지용 Chunked Base64)
     const getBase64 = async (url) => {
       try {
-        const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}&output=png&n=1`;
-        const resp = await fetch(proxyUrl);
-        if (!resp.ok) return "";
-        const buffer = await resp.arrayBuffer();
+        const proxy = `https://wsrv.nl/?url=${encodeURIComponent(url)}&n=1&output=png`;
+        const res = await fetch(proxy);
+        if (!res.ok) return "";
+        const buf = await res.arrayBuffer();
         
-        // Chunked conversion: 루프를 이용해 안정적으로 변환
-        let binary = '';
-        const bytes = new Uint8Array(buffer);
-        for (let i = 0; i < bytes.byteLength; i++) {
-          binary += String.fromCharCode(bytes[i]);
-        }
+        // btoa 안정성 확보 (대용량 대응)
+        let binary = "";
+        const bytes = new Uint8Array(buf);
+        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
         return `data:image/png;base64,${btoa(binary)}`;
       } catch (e) { return ""; }
     };
 
-    const [finalBg, finalImg] = await Promise.all([
-      getBase64(`https://igx.kr/v/1H/WEBTOON/${bgNum}`),
-      getBase64(imgParam.startsWith('http') ? imgParam : `https://igx.kr/v/1H/WEB_IMG/${imgParam}`)
-    ]);
+    const bgUrl = `https://igx.kr/v/1H/WEBTOON/${bgNum}`;
+    const imgUrl = imgParam.startsWith('http') ? imgParam : `https://igx.kr/v/1H/WEB_IMG/${imgParam}`;
+
+    // 병렬 로딩
+    const [finalBg, finalImg] = await Promise.all([getBase64(bgUrl), getBase64(imgUrl)]);
 
     // 5. 말풍선 렌더링 함수
-    const calcWidth = (lines, fSize) => {
+    const renderBubble = (lines, textConf) => {
+      if (!lines.length || !textConf) return "";
+      const { x, y, size } = textConf;
+      
+      // 글자 너비 계산
       let maxW = 0;
       lines.forEach(l => {
         let w = 0;
         for (let i=0; i<l.length; i++) {
           const c = l.charCodeAt(i);
-          w += (c > 0x2500) ? fSize : (c >= 48 && c <= 57 || c === 32 || c === 63 || c === 33) ? fSize * 0.6 : fSize * 0.8;
+          w += (c > 0x2500) ? size : (c >= 48 && c <= 57 || c === 32 || c === 63 || c === 33) ? size * 0.6 : size * 0.8;
         }
         if (w > maxW) maxW = w;
       });
-      return maxW;
-    };
 
-    const renderBubble = (lines, textConf) => {
-      if (!lines.length || !textConf) return "";
-      const { x, y, size } = textConf;
-      const tW = calcWidth(lines, size);
-      const rx = (tW + 140) / 2;
+      const rx = (maxW + 140) / 2;
       const ry = ((lines.length * size * 1.4) + 100) / 2;
+      
       return `
         <ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" fill="white" stroke="black" stroke-width="6" />
         ${lines.map((l, i) => `<text x="${x}" y="${y - ry + 50 + (i+0.8)*size*1.4}" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="${size}" fill="#000">${esc(l)}</text>`).join('')}
       `;
     };
 
-    // 6. SVG 출력
+    // 6. SVG 조립 (배경 -> 이미지 -> 텍스트 순서)
     const svg = `
     <svg width="1024" height="2000" viewBox="0 0 1024 2000" xmlns="http://www.w3.org/2000/svg">
-      <rect width="1024" height="2000" fill="#f0f0f0" /> <image href="${finalBg}" x="0" y="0" width="1024" height="2000" preserveAspectRatio="xMidYMid slice" />
+      <rect width="1024" height="2000" fill="white" />
+      ${finalBg ? `<image href="${finalBg}" x="0" y="0" width="1024" height="2000" preserveAspectRatio="xMidYMid slice" />` : ''}
       ${finalImg ? `<image href="${finalImg}" x="${conf.img.x}" y="${conf.img.y}" width="${conf.img.w}" height="${conf.img.h}" preserveAspectRatio="xMidYMid slice" />` : ''}
       
       ${deLines.map((l, i) => `<text x="512" y="${conf.de.y + (i*conf.de.size*1.3)}" text-anchor="middle" font-family="sans-serif" font-weight="600" font-size="${conf.de.size}" fill="#222">${esc(l)}</text>`).join('')}
