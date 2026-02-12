@@ -19,35 +19,29 @@ export default async function handler(req) {
     const text2Lines = process(text2Raw);
     const efLines = process(efRaw);
 
-    // 2. 랜덤 레이아웃 엔진
+    // 2. 랜덤 레이아웃 엔진 (형태 유지)
     const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-    // (1) 이미지: 중앙 배치
     const imgW = rand(820, 920);
     const imgH = rand(1000, 1300);
     const imgX = (1024 - imgW) / 2;
     const imgY = rand(400, 480);
 
-    // (2) DE (묘사): 상단 중앙 고정
     const deX = 512;
     const deY = imgY - 240;
 
-    // (3) Text (대사창): 위치 및 자연스러운 배치 로직
-    // Text1 (상단): 이미지 상단 모서리에 "걸치듯" 배치 (위아래 랜덤성 부여)
-    const isT1Left = Math.random() > 0.5;
-    const t1X = isT1Left ? imgX + 20 : imgX + imgW - 20;
-    const t1Y = imgY + rand(-20, 40); 
+    // [수정] Text 위치 랜덤성 강화: 좌우뿐만 아니라 상하 위치도 더 유동적으로 변경
+    const t1X = rand(imgX - 50, imgX + imgW + 50);
+    const t1Y = imgY + rand(-50, 100); 
 
-    // Text2 (하단): 이미지 하단 테두리보다 "더 아래로" 배치
-    const isT2Left = Math.random() > 0.5; // T1과 상관없이 독립적 랜덤
-    const t2X = isT2Left ? imgX + 50 : imgX + imgW - 50;
-    const t2Y = imgY + imgH + rand(80, 130); // 테두리보다 80~130px 아래로
+    const t2X = rand(imgX - 50, imgX + imgW + 50);
+    const t2Y = imgY + imgH + rand(50, 150); 
 
-    // (4) EF (효과음): 크기와 선 굵기 조절을 위한 설정
+    // [수정] EF 설정: 크기 축소 유지 및 스타일 변경 대비
     const efX = rand(150, 874);
-    const efY = rand(imgY + 200, imgY + imgH - 200);
+    const efY = rand(imgY + 150, imgY + imgH - 150);
     const efRot = rand(-20, 20);
-    const efSize = rand(90, 110); // [수정] 크기 축소 (기존 140)
+    const efSize = rand(85, 105);
 
     const conf = {
       img: { x: imgX, y: imgY, w: imgW, h: imgH },
@@ -117,7 +111,7 @@ export default async function handler(req) {
       ${renderBubble(text1Lines, conf.text1)}
       ${renderBubble(text2Lines, conf.text2)}
 
-      ${efLines.length ? efLines.map((l, i) => `<text x="${conf.ef.x}" y="${conf.ef.y + (i*conf.ef.size)}" text-anchor="middle" font-family='"Comic Sans MS", "Arial Rounded MT Bold", impact, sans-serif' font-weight="900" font-size="${conf.ef.size}" fill="#FFD700" stroke="#000" stroke-width="7" stroke-linejoin="round" transform="rotate(${conf.ef.rot}, ${conf.ef.x}, ${conf.ef.y})">${esc(l)}</text>`).join('') : ''}
+      ${efLines.length ? efLines.map((l, i) => `<text x="${conf.ef.x}" y="${conf.ef.y + (i*conf.ef.size)}" text-anchor="middle" font-family='"Impact", "Haettenschweiler", "Arial Narrow Bold", sans-serif' font-weight="900" font-size="${conf.ef.size}" fill="#000" stroke="#FFF" stroke-width="4" stroke-linejoin="round" transform="rotate(${conf.ef.rot}, ${conf.ef.x}, ${conf.ef.y})">${esc(l)}</text>`).join('') : ''}
     </svg>`;
 
     return new Response(svg.trim(), { 
