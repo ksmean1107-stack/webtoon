@@ -22,41 +22,39 @@ export default async function handler(req) {
     // 2. 랜덤 레이아웃 엔진
     const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-    // (1) 이미지: 중앙 배치 및 Y좌표 설정
-    const imgW = rand(820, 930);
-    const imgH = rand(1000, 1350);
+    // (1) 이미지: 중앙 배치
+    const imgW = rand(820, 920);
+    const imgH = rand(1000, 1300);
     const imgX = (1024 - imgW) / 2;
-    // 상단에 DE와 TEXT1이 모두 들어가야 하므로 공간 확보
-    const imgY = rand(400, 500);
+    const imgY = rand(400, 480);
 
-    // (2) DE (묘사): 최상단 중앙 고정
+    // (2) DE (묘사): 상단 중앙 고정
     const deX = 512;
-    const deY = imgY - 220; // 이미지보다 훨씬 위
+    const deY = imgY - 240;
 
-    // (3) Text (대사창): 상하 위치 고정 및 테두리 걸침
-    // 좌/우는 랜덤하게 결정
+    // (3) Text (대사창): 위치 및 자연스러운 배치 로직
+    // Text1 (상단): 이미지 상단 모서리에 "걸치듯" 배치 (위아래 랜덤성 부여)
     const isT1Left = Math.random() > 0.5;
-    const isT2Left = Math.random() > 0.5; // text2도 독립적으로 좌우 랜덤
+    const t1X = isT1Left ? imgX + 20 : imgX + imgW - 20;
+    const t1Y = imgY + rand(-20, 40); 
 
-    // Text1: 무조건 이미지 상단 테두리에 걸침
-    const t1X = isT1Left ? imgX : (imgX + imgW);
-    const t1Y = imgY + 30; // 이미지 상단 경계선 부근
+    // Text2 (하단): 이미지 하단 테두리보다 "더 아래로" 배치
+    const isT2Left = Math.random() > 0.5; // T1과 상관없이 독립적 랜덤
+    const t2X = isT2Left ? imgX + 50 : imgX + imgW - 50;
+    const t2Y = imgY + imgH + rand(80, 130); // 테두리보다 80~130px 아래로
 
-    // Text2: 무조건 이미지 하단 테두리에 걸침
-    const t2X = isT2Left ? imgX : (imgX + imgW);
-    const t2Y = imgY + imgH - 30; // 이미지 하단 경계선 부근
-
-    // (4) EF (효과음): 이미지 주변 랜덤
-    const efX = rand(100, 924);
-    const efY = rand(imgY, imgY + imgH);
-    const efRot = rand(-25, 25); // 회전각을 좀 더 줌
+    // (4) EF (효과음): 크기와 선 굵기 조절을 위한 설정
+    const efX = rand(150, 874);
+    const efY = rand(imgY + 200, imgY + imgH - 200);
+    const efRot = rand(-20, 20);
+    const efSize = rand(90, 110); // [수정] 크기 축소 (기존 140)
 
     const conf = {
       img: { x: imgX, y: imgY, w: imgW, h: imgH },
-      de: { x: deX, y: deY, size: 42 },
-      text1: { x: t1X, y: t1Y, size: 55 },
-      text2: { x: t2X, y: t2Y, size: 55 },
-      ef: { x: efX, y: efY, size: 90, rot: efRot }
+      de: { x: deX, y: deY, size: 40 },
+      text1: { x: t1X, y: t1Y, size: 52 },
+      text2: { x: t2X, y: t2Y, size: 52 },
+      ef: { x: efX, y: efY, size: efSize, rot: efRot }
     };
 
     // 3. 이미지 로더
@@ -77,11 +75,10 @@ export default async function handler(req) {
 
     const finalImg = await getBase64(imgParam);
 
-    // 4. 말풍선 렌더링 (테두리 걸침 및 화면 보정)
+    // 4. 말풍선 렌더링
     const renderBubble = (lines, textConf) => {
       if (!lines.length || !textConf) return "";
       const { x, y, size } = textConf;
-      
       let maxW = 0;
       lines.forEach(l => {
         let w = 0;
@@ -92,16 +89,15 @@ export default async function handler(req) {
         if (w > maxW) maxW = w;
       });
 
-      const rx = (maxW + 120) / 2;
-      const ry = ((lines.length * size * 1.3) + 90) / 2;
+      const rx = (maxW + 110) / 2;
+      const ry = ((lines.length * size * 1.3) + 80) / 2;
       
-      // 화면 밖으로 완전히 나가는 것만 방지
       let fx = x;
-      if (fx - rx < 10) fx = 10 + rx;
-      if (fx + rx > 1014) fx = 1014 - rx;
+      if (fx - rx < 15) fx = 15 + rx;
+      if (fx + rx > 1009) fx = 1009 - rx;
 
       return `
-        <ellipse cx="${fx}" cy="${y}" rx="${rx}" ry="${ry}" fill="white" stroke="black" stroke-width="6" />
+        <ellipse cx="${fx}" cy="${y}" rx="${rx}" ry="${ry}" fill="white" stroke="black" stroke-width="5" />
         ${lines.map((l, i) => `<text x="${fx}" y="${y - ry + 40 + (i+0.8)*size*1.3}" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="${size}" fill="#000">${esc(l)}</text>`).join('')}
       `;
     };
@@ -121,7 +117,7 @@ export default async function handler(req) {
       ${renderBubble(text1Lines, conf.text1)}
       ${renderBubble(text2Lines, conf.text2)}
 
-      ${efLines.length ? efLines.map((l, i) => `<text x="${conf.ef.x}" y="${conf.ef.y + (i*conf.ef.size)}" text-anchor="middle" font-family='"Comic Sans MS", "Arial Rounded MT Bold", impact, sans-serif' font-weight="600" font-size="${conf.ef.size}" fill="#FFD700" stroke="#000" stroke-width="2" stroke-linejoin="round" transform="rotate(${conf.ef.rot}, ${conf.ef.x}, ${conf.ef.y})">${esc(l)}</text>`).join('') : ''}
+      ${efLines.length ? efLines.map((l, i) => `<text x="${conf.ef.x}" y="${conf.ef.y + (i*conf.ef.size)}" text-anchor="middle" font-family='"Comic Sans MS", "Arial Rounded MT Bold", impact, sans-serif' font-weight="900" font-size="${conf.ef.size}" fill="#FFD700" stroke="#000" stroke-width="7" stroke-linejoin="round" transform="rotate(${conf.ef.rot}, ${conf.ef.x}, ${conf.ef.y})">${esc(l)}</text>`).join('') : ''}
     </svg>`;
 
     return new Response(svg.trim(), { 
