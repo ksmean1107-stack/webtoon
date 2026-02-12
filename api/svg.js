@@ -92,7 +92,7 @@ export default async function handler(req) {
     };
 
     const bgUrl = `https://igx.kr/v/1H/WEBTOON/${bgNum}`;
-    const imgUrl = imgParam.startsWith('http') ? imgParam : `https://igx.kr/v/1H/WEB_IMG/${imgParam}`;
+    const imgUrl = imgParam.startsWith('http') ? imgParam : `https://igx.kr/v/1H/WEBTOON_IMG/${imgParam}`;
 
     const [finalBg, finalImg] = await Promise.all([getBase64(bgUrl), getBase64(imgUrl)]);
 
