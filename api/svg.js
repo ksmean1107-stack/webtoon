@@ -34,7 +34,7 @@ export default async function handler(req) {
       "3": { img: {x:96, y:408, w:795, h:1204}, de: {y:180, size:42}, text1: {x:512, y:1650, size:55}, ef: {x:512, y:950, size:130, rot:-5} },
       "4": { img: {x:45, y:407, w:866, h:1340}, text1: {x:512, y:1850, size:55}, text2: {x:512, y:1600, size:55} },
       "5": { img: {x:0, y:200, w:795, h:1340}, text1: {x:512, y:1850, size:55}, text2: {x:512, y:1600, size:55} },
-      "6": { img: {x:0, y:200, w:795, h:1204}, text1: {x:512, y:1850, size:55}, text2: {x:512, y:1600, size:55} },
+      "6": { img: {x:0, y:200, w:795, h:1340}, text1: {x:512, y:1850, size:55}, text2: {x:512, y:1600, size:55} },
       "7": { img: {x:0, y:200, w:795, h:1204}, text1: {x:512, y:1850, size:55}, text2: {x:512, y:1600, size:55} },
       "8": { img: {x:0, y:200, w:795, h:1204}, text1: {x:512, y:1850, size:55}, text2: {x:512, y:1600, size:55} },
       "9": { img: {x:0, y:200, w:795, h:1204}, text1: {x:512, y:1850, size:55}, text2: {x:512, y:1600, size:55} },
