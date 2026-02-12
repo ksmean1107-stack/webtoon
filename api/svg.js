@@ -25,18 +25,18 @@ export default async function handler(req) {
     const textLines = showText ? process(textRaw) : [];
     const efLines = showEf ? process(efRaw) : [];
 
-    // 2. 레이아웃 1-3 고정 좌표 반영 (51, 462, 795, 1204)
+    // 2. 레이아웃 설정 (text.x 값을 수정하여 위치 조절 가능)
     const LAYOUTS = {
-      "1-3":   { img: {x:51, y:462, w:795, h:1204}, de: {y:180, size:42}, text: {x:300, y:1700, size:50}, ef: {x:512, y:950, size:130, rot:-5} },
-      "4-10":  { img: {x:0, y:200, w:1024, h:1400}, de: {y:150, size:40}, text: {y:1850, size:55}, ef: {x:512, y:1000, size:130, rot:0} },
-      "11-14": { img: {x:50, y:100, w:924, h:1500}, de: {y:150, size:40}, text: {y:1800, size:50}, ef: {x:512, y:800, size:160, rot:-10} },
-      "15-18": { img: {x:112, y:400, w:800, h:800},  de: {y:150, size:40}, text: {y:1850, size:55}, ef: {x:512, y:1000, size:130, rot:5} },
-      "19-20": { img: {x:0, y:0, w:1024, h:2000},   de: {y:250, size:60}, text: {y:1800, size:50}, ef: {x:512, y:1000, size:130, rot:0} }
+      "1-3":   { img: {x:51, y:462, w:795, h:1204}, de: {y:180, size:42}, text: {x:800, y:1700, size:50}, ef: {x:512, y:950, size:130, rot:-5} },
+      "4-10":  { img: {x:0, y:200, w:1024, h:1400}, de: {y:150, size:40}, text: {x:512, y:1850, size:55}, ef: {x:512, y:1000, size:130, rot:0} },
+      "11-14": { img: {x:50, y:100, w:924, h:1500}, de: {y:150, size:40}, text: {x:512, y:1800, size:50}, ef: {x:512, y:800, size:160, rot:-10} },
+      "15-18": { img: {x:112, y:400, w:800, h:800},  de: {y:150, size:40}, text: {x:512, y:1850, size:55}, ef: {x:512, y:1000, size:130, rot:5} },
+      "19-20": { img: {x:0, y:0, w:1024, h:2000},   de: {y:250, size:60}, text: {x:512, y:1800, size:50}, ef: {x:512, y:1000, size:130, rot:0} }
     };
 
     let conf = (bgNum <= 3) ? LAYOUTS["1-3"] : (bgNum <= 10) ? LAYOUTS["4-10"] : (bgNum <= 14) ? LAYOUTS["11-14"] : (bgNum <= 18) ? LAYOUTS["15-18"] : LAYOUTS["19-20"];
 
-    // 3. Base64 변환 함수 (안정성 강화)
+    // 3. Base64 변환 함수
     const getBase64 = async (url) => {
       try {
         const proxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}&output=png`;
@@ -45,21 +45,15 @@ export default async function handler(req) {
         const buffer = await resp.arrayBuffer();
         const b64 = btoa(new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), ''));
         return `data:image/png;base64,${b64}`;
-      } catch (e) {
-        return "";
-      }
+      } catch (e) { return ""; }
     };
 
     const bgUrl = `https://igx.kr/v/1H/WEBTOON/${bgNum}`;
-    const imgRawUrl = imgParam.startsWith('http') ? imgParam : `https://igx.kr/v/1H/WEBTOON_IMG/${imgParam}`;
+    const imgRawUrl = imgParam.startsWith('http') ? imgParam : `https://igx.kr/v/1H/WEB_IMG/${imgParam}`;
 
-    // 병렬로 Base64 로드
-    const [finalBg, finalImg] = await Promise.all([
-      getBase64(bgUrl),
-      getBase64(imgRawUrl)
-    ]);
+    const [finalBg, finalImg] = await Promise.all([getBase64(bgUrl), getBase64(imgRawUrl)]);
 
-    // 4. 말풍선 계산 (타원형)
+    // 4. 말풍선 및 텍스트 위치 계산
     const fSize = conf.text.size;
     const calcW = (lines) => {
       let maxW = 0;
@@ -77,7 +71,8 @@ export default async function handler(req) {
     const tW = calcW(textLines);
     const rx = (tW + 140) / 2;
     const ry = ((textLines.length * fSize * 1.4) + 100) / 2;
-    const cy = conf.text.y;
+    const cx = conf.text.x; // 대사 중앙 X좌표 (커스텀 가능)
+    const cy = conf.text.y; // 대사 중앙 Y좌표
 
     // 5. SVG 생성
     const svg = `
@@ -89,8 +84,8 @@ export default async function handler(req) {
       ${deLines.map((l, i) => `<text x="512" y="${conf.de.y + (i*conf.de.size*1.3)}" text-anchor="middle" font-family="sans-serif" font-weight="600" font-size="${conf.de.size}" fill="#222">${esc(l)}</text>`).join('')}
 
       ${textLines.length > 0 ? `
-        <ellipse cx="512" cy="${cy}" rx="${rx}" ry="${ry}" fill="white" stroke="black" stroke-width="6" />
-        ${textLines.map((l, i) => `<text x="512" y="${cy - ry + 50 + (i+0.8)*fSize*1.4}" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="${fSize}" fill="#000">${esc(l)}</text>`).join('')}
+        <ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="white" stroke="black" stroke-width="6" />
+        ${textLines.map((l, i) => `<text x="${cx}" y="${cy - ry + 50 + (i+0.8)*fSize*1.4}" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="${fSize}" fill="#000">${esc(l)}</text>`).join('')}
       ` : ''}
 
       ${efLines.map((l, i) => `<text x="${conf.ef.x}" y="${conf.ef.y + (i*conf.ef.size)}" text-anchor="middle" font-family="sans-serif" font-weight="900" font-size="${conf.ef.size}" fill="#FF0" stroke="#000" stroke-width="10" stroke-linejoin="round" transform="rotate(${conf.ef.rot}, ${conf.ef.x}, ${conf.ef.y})">${esc(l)}</text>`).join('')}
