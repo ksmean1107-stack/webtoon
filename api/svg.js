@@ -63,7 +63,7 @@ export default async function handler(req) {
     const getBase64 = async (url) => {
       if (!url) return "";
       try {
-        const fullUrl = url.startsWith('http') ? url : `https://igx.kr/v/1H/WEB_IMG/${url}`;
+        const fullUrl = url.startsWith('http') ? url : `https://igx.kr/v/1H/WEBTOON_IMG/${url}`;
         const proxy = `https://wsrv.nl/?url=${encodeURIComponent(fullUrl)}&n=1&output=png`;
         const res = await fetch(proxy);
         if (!res.ok) return "";
