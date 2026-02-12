@@ -31,7 +31,7 @@ export default async function handler(req) {
     const LAYOUTS = {
       "1": { img: {x:51, y:462, w:795, h:1204}, de: {y:180, size:42}, text1: {x:512, y:1780, size:55}, ef: {x:512, y:950, size:130, rot:-5} },
       "2": { img: {x:185, y:545, w:795, h:1204}, de: {y:180, size:42}, text1: {x:512, y:1780, size:55}, ef: {x:512, y:950, size:130, rot:-5} },
-      "3": { img: {x:51, y:462, w:795, h:1204}, de: {y:180, size:42}, text1: {x:512, y:1780, size:55}, ef: {x:512, y:950, size:130, rot:-5} },
+      "3": { img: {x:100, y:445, w:795, h:1204}, de: {y:180, size:42}, text1: {x:512, y:1780, size:55}, ef: {x:512, y:950, size:130, rot:-5} },
       "4": { img: {x:0, y:200, w:1024, h:1400}, text1: {x:512, y:1850, size:55}, text2: {x:512, y:1600, size:55} },
       "5": { img: {x:0, y:200, w:1024, h:1400}, text1: {x:512, y:1850, size:55}, text2: {x:512, y:1600, size:55} },
       "6": { img: {x:0, y:200, w:1024, h:1400}, text1: {x:512, y:1850, size:55}, text2: {x:512, y:1600, size:55} },
