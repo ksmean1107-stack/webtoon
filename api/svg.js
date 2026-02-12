@@ -38,7 +38,7 @@ export default async function handler(req) {
     const t2Y = imgY + imgH + rand(60, 140); 
 
     // --- EF(효과음) 위치 및 이탈 방지 로직 ---
-    const efSize = rand(85, 105);
+    const efSize = rand(55, 65);
     const isEfLeft = Math.random() > 0.5;
     let efX = isEfLeft ? rand(imgX, imgX + 100) : rand(imgX + imgW - 100, imgX + imgW);
     const efY = rand(imgY + 200, imgY + imgH - 200);
