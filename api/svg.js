@@ -30,7 +30,7 @@ export default async function handler(req) {
     // 3. 1~20번 개별 레이아웃 설정 (모두 size 55 적용)
     const LAYOUTS = {
       "1": { img: {x:51, y:462, w:795, h:1204}, de: {y:180, size:42}, text1: {x:600, y:1700, size:55}, ef: {x:512, y:950, size:130, rot:-5} },
-      "2": { img: {x:185, y:545, w:795, h:1204}, de: {y:180, size:42}, text1: {x:512, y:1780, size:55}, ef: {x:512, y:950, size:130, rot:-5} },
+      "2": { img: {x:185, y:545, w:795, h:1204}, de: {y:180, size:42}, text1: {x:400, y:1780, size:55}, ef: {x:512, y:950, size:130, rot:-5} },
       "3": { img: {x:96, y:408, w:795, h:1204}, de: {y:180, size:42}, text1: {x:512, y:1780, size:55}, ef: {x:512, y:950, size:130, rot:-5} },
       "4": { img: {x:0, y:200, w:795, h:1204}, text1: {x:512, y:1850, size:55}, text2: {x:512, y:1600, size:55} },
       "5": { img: {x:0, y:200, w:795, h:1204}, text1: {x:512, y:1850, size:55}, text2: {x:512, y:1600, size:55} },
