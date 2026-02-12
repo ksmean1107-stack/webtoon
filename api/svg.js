@@ -28,7 +28,6 @@ export default async function handler(req) {
     const deX = 512;
     const deY = imgY - 240;
 
-    // Text 위치 로직 유지
     const t1X = rand(imgX - 30, imgX + imgW + 30);
     const t1Y = imgY + rand(-40, 60); 
 
@@ -38,12 +37,23 @@ export default async function handler(req) {
     }
     const t2Y = imgY + imgH + rand(60, 140); 
 
-    // [수정] EF 위치: 이미지 중앙을 피하고 좌/우 사이드 영역에 랜덤 배치
+    // --- EF(효과음) 위치 및 이탈 방지 로직 ---
+    const efSize = rand(85, 105);
     const isEfLeft = Math.random() > 0.5;
-    const efX = isEfLeft ? rand(imgX, imgX + 150) : rand(imgX + imgW - 150, imgX + imgW);
+    let efX = isEfLeft ? rand(imgX, imgX + 100) : rand(imgX + imgW - 100, imgX + imgW);
     const efY = rand(imgY + 200, imgY + imgH - 200);
     const efRot = rand(-20, 20);
-    const efSize = rand(85, 105);
+
+    // [핵심 추가] 효과음 길이에 따른 X축 자동 보정
+    if (efLines.length > 0) {
+      const longestEf = efLines.reduce((a, b) => a.length > b.length ? a : b);
+      const approxEfWidth = longestEf.length * (efSize * 0.8); // 대략적인 너비 계산
+      const halfW = approxEfWidth / 2;
+      
+      if (efX - halfW < 20) efX = 20 + halfW;        // 왼쪽 이탈 방지
+      if (efX + halfW > 1004) efX = 1004 - halfW;    // 오른쪽 이탈 방지
+    }
+    // ---------------------------------------
 
     const conf = {
       img: { x: imgX, y: imgY, w: imgW, h: imgH },
