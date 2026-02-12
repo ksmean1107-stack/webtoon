@@ -28,19 +28,20 @@ export default async function handler(req) {
     const deX = 512;
     const deY = imgY - 240;
 
-    // [수정] Text 위치 로직: Text1과 Text2가 좌우로 서로 떨어지도록 보정
+    // Text 위치 로직 유지
     const t1X = rand(imgX - 30, imgX + imgW + 30);
     const t1Y = imgY + rand(-40, 60); 
 
     let t2X = rand(imgX - 30, imgX + imgW + 30);
-    // [핵심] t2X가 t1X와 너무 가까우면(250px 미만) 반대편으로 밀어버림
     if (Math.abs(t2X - t1X) < 250) {
       t2X = (t1X > 512) ? t2X - 300 : t2X + 300;
     }
     const t2Y = imgY + imgH + rand(60, 140); 
 
-    const efX = rand(150, 874);
-    const efY = rand(imgY + 150, imgY + imgH - 150);
+    // [수정] EF 위치: 이미지 중앙을 피하고 좌/우 사이드 영역에 랜덤 배치
+    const isEfLeft = Math.random() > 0.5;
+    const efX = isEfLeft ? rand(imgX, imgX + 150) : rand(imgX + imgW - 150, imgX + imgW);
+    const efY = rand(imgY + 200, imgY + imgH - 200);
     const efRot = rand(-20, 20);
     const efSize = rand(85, 105);
 
