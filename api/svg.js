@@ -37,23 +37,19 @@ export default async function handler(req) {
     }
     const t2Y = imgY + imgH + rand(60, 140); 
 
-    // --- EF(효과음) 위치 및 이탈 방지 로직 ---
     const efSize = rand(55, 65);
     const isEfLeft = Math.random() > 0.5;
     let efX = isEfLeft ? rand(imgX, imgX + 100) : rand(imgX + imgW - 100, imgX + imgW);
     const efY = rand(imgY + 200, imgY + imgH - 200);
     const efRot = rand(-20, 20);
 
-    // [핵심 추가] 효과음 길이에 따른 X축 자동 보정
     if (efLines.length > 0) {
       const longestEf = efLines.reduce((a, b) => a.length > b.length ? a : b);
-      const approxEfWidth = longestEf.length * (efSize * 0.8); // 대략적인 너비 계산
+      const approxEfWidth = longestEf.length * (efSize * 0.8); 
       const halfW = approxEfWidth / 2;
-      
-      if (efX - halfW < 20) efX = 20 + halfW;        // 왼쪽 이탈 방지
-      if (efX + halfW > 1004) efX = 1004 - halfW;    // 오른쪽 이탈 방지
+      if (efX - halfW < 20) efX = 20 + halfW;
+      if (efX + halfW > 1004) efX = 1004 - halfW;
     }
-    // ---------------------------------------
 
     const conf = {
       img: { x: imgX, y: imgY, w: imgW, h: imgH },
@@ -63,18 +59,20 @@ export default async function handler(req) {
       ef: { x: efX, y: efY, size: efSize, rot: efRot }
     };
 
+    // [전송량 다이어트 핵심] 이미지를 가져올 때 미리 압축하고 리사이징합니다.
     const getBase64 = async (url) => {
       if (!url) return "";
       try {
         const fullUrl = url.startsWith('http') ? url : `https://igx.kr/v/1H/WEBTOON_IMG/${url}`;
-        const proxy = `https://wsrv.nl/?url=${encodeURIComponent(fullUrl)}&n=1&output=png`;
+        // 가로 600px 리사이징 + WebP 포맷 변경 + 품질 60 설정
+        const proxy = `https://wsrv.nl/?url=${encodeURIComponent(fullUrl)}&w=600&fit=contain&output=webp&q=60`;
         const res = await fetch(proxy);
         if (!res.ok) return "";
         const buf = await res.arrayBuffer();
         let binary = "";
         const bytes = new Uint8Array(buf);
         for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-        return `data:image/png;base64,${btoa(binary)}`;
+        return `data:image/webp;base64,${btoa(binary)}`; // 용량이 가벼운 webp 데이터 반환
       } catch (e) { return ""; }
     };
 
@@ -92,10 +90,8 @@ export default async function handler(req) {
         }
         if (w > maxW) maxW = w;
       });
-
       const rx = (maxW + 110) / 2;
       const ry = ((lines.length * size * 1.3) + 80) / 2;
-      
       let fx = x;
       if (fx - rx < 15) fx = 15 + rx;
       if (fx + rx > 1009) fx = 1009 - rx;
@@ -126,7 +122,7 @@ export default async function handler(req) {
     return new Response(svg.trim(), { 
       headers: { 
         'Content-Type': 'image/svg+xml', 
-        'Cache-Control': 'no-store, no-cache, must-revalidate'
+        'Cache-Control': 'public, max-age=3600' // 브라우저 캐싱으로 전송량 한 번 더 절약
       } 
     });
   } catch (e) {
